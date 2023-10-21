@@ -1,0 +1,13 @@
+.chat-box {
+    width: 400px;
+    max-width: 400px;
+    padding: 0px 9px;
+    height: calc(100% - 50px);
+    border: 1px solid black;
+    overflow-x: auto;
+    text-wrap: wrap;
+}
+.chat-text {
+    inline-size: 382px;
+    overflow-wrap: break-word;
+}
