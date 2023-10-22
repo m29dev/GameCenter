@@ -5,14 +5,31 @@ const roomSchema = mongoose.Schema({
         type: String,
         required: true,
     },
+    roomJoinable: {
+        type: Boolean,
+        required: true,
+    },
+    roundNumber: {
+        type: Number,
+        required: true,
+    },
+    clients: {
+        type: Array,
+        required: true,
+    },
     gameData: {
         type: Array,
-        default: [],
+        required: true,
     },
-    gamePoints: {
-        type: Array,
-        default: [],
-    },
+
+    // gameData: {
+    //     type: Array,
+    //     default: [],
+    // },
+    // gamePoints: {
+    //     type: Array,
+    //     default: [],
+    // },
 
     // game status, false - users can join, true - users cannot join
     // gameStarted: {

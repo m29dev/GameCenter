@@ -1,21 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useOutletContext, useParams } from 'react-router-dom'
+import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import Chat from '../components/chat'
 import Game from '../components/Game'
 import './room.css'
-import { useRoomUserJoinMutation } from '../services/roomService'
-import { useSelector } from 'react-redux'
+import { useDispatch } from 'react-redux'
+import { setRoomInfo } from '../redux/authSlice'
 
 const RoomsIdPage = () => {
-    const { userInfo } = useSelector((state) => state.auth)
     const [socket] = useOutletContext()
     const [roomId, setRoomId] = useState(null)
-
-    // get room ID from params
     const params = useParams()
+    const dispatch = useDispatch()
+    const navigate = useNavigate()
 
     // room config
-    const [roomUserJoin] = useRoomUserJoinMutation()
     const joinRoom = useCallback(async () => {
         const { id } = params
         setRoomId(id)
@@ -24,18 +22,31 @@ const RoomsIdPage = () => {
         socket.emit('roomJoin', {
             roomId: id,
         })
-
-        // add user init objects to the database
-        await roomUserJoin({
-            nickname: userInfo?.nickname,
-            roomId,
-        }).unwrap()
-    }, [params, setRoomId, socket, roomUserJoin, userInfo, roomId])
+    }, [params, setRoomId, socket])
 
     // join room on init
     useEffect(() => {
         joinRoom()
     }, [joinRoom])
+
+    // on room join data event
+    useEffect(() => {
+        const handleRoomJoinData = (data) => {
+            if (data?.message) {
+                console.log(data?.message)
+                dispatch(setRoomInfo(data?.room))
+            }
+
+            if (data?.error) {
+                window.alert(data?.error)
+                navigate('/home')
+            }
+        }
+
+        socket.on('roomJoinData', (data) => handleRoomJoinData(data))
+
+        return () => socket.off('roomJoinData', handleRoomJoinData)
+    }, [socket, dispatch, navigate])
 
     return (
         <>

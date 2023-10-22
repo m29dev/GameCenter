@@ -4,10 +4,21 @@ const room_create = async (req, res) => {
     try {
         const { id, categories } = req.body
 
+        // check if room with entered id already exists
+        const checkRoom = await Room.findOne({ roomId: id })
+        console.log(checkRoom)
+        if (checkRoom)
+            return res.status(400).json({
+                message:
+                    'room with entered ID already exists. Try again with another ID.',
+            })
+
         const room = new Room({
             roomId: id,
+            roomJoinable: true,
+            roundNumber: 0,
+            clients: [],
             gameData: [],
-            gamePoints: [],
         })
 
         const savedRoom = await room.save()
@@ -38,15 +49,12 @@ const room_user_join = async (req, res) => {
 
         // check if user data already exists
         if (roomCurr) {
-            console.log(roomCurr)
             let userExists = false
             roomCurr.gameData.forEach((data) => {
                 if (data?.nickname === nickname) {
                     return (userExists = true)
                 }
             })
-
-            console.log(userExists)
 
             if (!userExists) {
                 roomCurr.gameData = [...roomCurr?.gameData, userGameDataObject]
@@ -66,30 +74,27 @@ const room_user_join = async (req, res) => {
 const room_data_save = async (req, res) => {
     try {
         const { roomId, nickname, data } = req.body
-        console.log(roomId, nickname, ...data)
+        // console.log(nickname, ...data)
+
+        console.log('update gameData: ', data)
 
         // find room by roomId
         const room = await Room.findOne({ roomId })
-        console.log(room)
+        if (!room) return res.status(400).json({ messega: 'no room found' })
 
-        // update gameData
-        const userGameDataObject = {
-            round: '1',
-            nickname,
-            data,
-        }
+        // console.log('update user game data')
+        room.gameData.forEach((item) => {
+            if (item.nickname === nickname) {
+                item.answers = [...data]
+                return
+            }
+        })
 
-        room.gameData = [...room?.gameData, userGameDataObject]
-        await room.save()
+        await Room.findByIdAndUpdate(
+            { _id: room._id },
+            { gameData: room.gameData }
+        )
 
-        // const room = new Room({
-        //     roomId: id,
-        //     users: [],
-        //     categories,
-        // })
-
-        // const savedRoom = await room.save()
-        // if (!savedRoom) return res.status(400).json({ message: 'err' })
         res.status(200)
     } catch (err) {
         console.log(err)
@@ -99,13 +104,12 @@ const room_data_save = async (req, res) => {
 const room_data_get = async (req, res) => {
     try {
         const { roomId } = req.params
-        console.log(roomId)
-
+        console.log('REQ GET_ROOM_DATA 1')
         // find room by roomId
         const room = await Room.findOne({ roomId })
-        console.log(room)
 
         if (!room) return res.status(400).json({ message: 'err' })
+        console.log('RES GET_ROOM_DATA 2')
         res.status(200).json(room)
     } catch (err) {
         console.log(err)

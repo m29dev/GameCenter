@@ -15,23 +15,30 @@ const RoomsCreatePage = () => {
 
             navigate(`/rooms/${res}`)
         } catch (err) {
-            console.log(err)
+            console.log(err?.data?.message)
+            window.alert(err?.data?.message)
         }
     }
     return (
         <>
-            <h1>Set room name</h1>
-            <input
-                type="text"
-                onChange={(e) => {
-                    setRoomName(e.target.value)
+            <form
+                onSubmit={(e) => {
+                    e.preventDefault()
+                    onRoomCreate()
                 }}
-                value={roomName}
-            />
+            >
+                <h1>Set room name</h1>
+                <input
+                    type="text"
+                    onChange={(e) => {
+                        setRoomName(e.target.value)
+                    }}
+                    value={roomName}
+                />
 
-            <button disabled={roomName ? false : true} onClick={onRoomCreate}>
-                Start Game
-            </button>
+                <button disabled={roomName ? false : true}>Start Game</button>
+            </form>
+            <hr />
 
             {categories?.map((item, index) => (
                 <h4 key={index}>{item}</h4>

@@ -1,21 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
-import {
-    useGetGameDataMutation,
-    useSaveGameDataMutation,
-} from '../services/roomService'
-import { useSelector } from 'react-redux'
+import { useGetGameDataMutation } from '../services/roomService'
+import { useDispatch, useSelector } from 'react-redux'
 import { useOutletContext } from 'react-router-dom'
+import { setGameInfo, setRoomInfo } from '../redux/authSlice'
 
 const Game = (roomId) => {
-    const { userInfo } = useSelector((state) => state.auth)
+    const { userInfo, roomInfo, gameInfo } = useSelector((state) => state.auth)
     const [socket] = useOutletContext()
+    const dispatch = useDispatch()
 
     // game config
     // categories
     const [country, setCountry] = useState(null)
     const [city, setCity] = useState(null)
 
-    const [saveGameData] = useSaveGameDataMutation()
     const handleSaveGameData = useCallback(async () => {
         try {
             const dataObject = {
@@ -24,21 +22,25 @@ const Game = (roomId) => {
                 data: [
                     {
                         category: 'Panstwo',
-                        answer: country,
+                        answer: country ? country : '',
                     },
                     {
                         category: 'Miasto',
-                        answer: city,
+                        answer: city ? city : '',
                     },
                 ],
             }
 
-            const res = await saveGameData(dataObject)
-            console.log(res)
+            dispatch(setGameInfo(dataObject))
+
+            // const res = await saveGameData(dataObject)
+            // console.log(res)
+            setCountry(null)
+            setCity(null)
         } catch (err) {
             console.log(err)
         }
-    }, [saveGameData, roomId, userInfo, country, city])
+    }, [roomId, userInfo, country, city, dispatch])
 
     const [gameData, setGameData] = useState(null)
     const [getGameData] = useGetGameDataMutation()
@@ -76,22 +78,26 @@ const Game = (roomId) => {
 
     // start the game
     useEffect(() => {
-        const handleStartGame = (randomCharacter) => {
-            console.log('game starts! ', randomCharacter)
-            setCharacter(randomCharacter)
+        const handleStartGame = (data) => {
+            setCountry(null)
+            setCity(null)
+            console.log('game starts! ', data?.character)
+            setCharacter(data?.character)
+            dispatch(setRoomInfo(data?.roomUpdate))
+
             timer()
             setGame(true)
         }
 
-        socket.on('startGameRoom', (randomCharacter) =>
-            handleStartGame(randomCharacter)
-        )
+        socket.on('startGameRoom', (data) => {
+            handleStartGame(data)
+        })
         return () => socket.off('startGameRoom', handleStartGame)
-    }, [socket, timer, setCharacter, setGame])
+    }, [socket, timer, setCharacter, setGame, dispatch])
 
     // end the game
     useEffect(() => {
-        const handleEndGame = () => {
+        const handleEndGame = (res) => {
             console.log('game ends!  ')
 
             // save user answers
@@ -99,30 +105,61 @@ const Game = (roomId) => {
 
             setGame(false)
 
-            // fetch all game data and display game results
-            handleGetGameData()
+            console.log('fetched data: ', res)
         }
 
         socket.on('endGameRoom', handleEndGame)
         return () => socket.off('endGameRoom', handleEndGame)
     }, [socket, handleSaveGameData, handleGetGameData, setGame])
 
+    // re-start the game
+    useEffect(() => {
+        const handleRestartGame = (roomRestart) => {
+            setCountry(null)
+            setCity(null)
+            console.log('game has been restarted! ', roomRestart)
+            dispatch(setRoomInfo(roomRestart))
+            setCharacter(null)
+            setGame(false)
+        }
+
+        socket.on('restartGameRoom', (roomRestart) => {
+            handleRestartGame(roomRestart)
+        })
+        return () => socket.off('startGameRoom', handleRestartGame)
+    }, [socket, timer, setCharacter, setGame, dispatch])
+
     return (
         <>
             <div className="game-box-center">
                 {!game && <button onClick={onStartGame}>Start</button>}
 
-                {!game && gameData && (
+                {/* {!game && gameData && (
                     // round results
                     <div>
                         {gameData?.gameData?.map((item, index) => (
                             <div key={index}>
                                 <h1>{item?.nickname}</h1>
-                                {item?.data?.map((category, index) => (
+                                {item?.answers?.map((category, index) => (
                                     <h4 key={index}>
                                         {category?.category}: {category?.answer}
                                     </h4>
                                 ))}
+                            </div>
+                        ))}
+                    </div>
+                )} */}
+
+                {!game && gameInfo && (
+                    // round results
+                    <div>
+                        <br />
+                        <h1>Your answers in round {roomInfo?.roundNumber}</h1>
+                        {gameInfo?.data?.map((item, index) => (
+                            <div key={index}>
+                                <h4>
+                                    {item?.category}: {item?.answer}
+                                </h4>
                             </div>
                         ))}
                     </div>
@@ -134,6 +171,7 @@ const Game = (roomId) => {
                         <div>
                             <h1>{character}</h1>
                         </div>
+                        <div>Round {roomInfo?.roundNumber}</div>
 
                         {/* game box */}
                         <div className="game-box">

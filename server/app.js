@@ -42,32 +42,130 @@ io.on('connection', async (socket) => {
 
         // on room join
         socket.on('roomJoin', async ({ roomId }) => {
-            socket.join(roomId)
+            const room = await Room.findOne({ roomId })
+            if (!room)
+                return (
+                    console.log('no room found'),
+                    socket.emit('roomJoinData', {
+                        error: 'no room found',
+                    })
+                )
 
-            console.log(
-                `${socket.userId} ${socket.id} has been added to the Room ${roomId}`
-            )
+            if (room?.roomJoinable) {
+                // join socket client to the room
+                socket.join(roomId)
+
+                // check if user nickname is already in tha clients array
+                let isClient = false
+                room?.clients?.forEach((client) => {
+                    if (client === socket.userId) return (isClient = true)
+                })
+
+                // add user nickname to the database clients array
+                if (!isClient) {
+                    room.clients.push(socket.userId)
+                    await Room.findByIdAndUpdate(
+                        { _id: room._id },
+                        { clients: room.clients }
+                    )
+
+                    socket.emit('roomJoinData', {
+                        room,
+                        message: 'user joined the room',
+                    })
+
+                    console.log(
+                        `${socket.userId} ${socket.id} has joined Room ${roomId}`
+                    )
+                }
+
+                if (isClient) {
+                    socket.emit('roomJoinData', {
+                        room,
+                        message: 'user re-joined the room',
+                    })
+
+                    console.log(
+                        `${socket.userId} ${socket.id} has re-joined Room ${roomId}`
+                    )
+                }
+            }
+
+            if (!room?.roomJoinable) {
+                // check if user client was in the game
+                let isClient = false
+                room.clients.forEach((client) => {
+                    if (client === socket.userId) {
+                        socket.join(roomId)
+                        isClient = true
+
+                        socket.emit('roomJoinData', {
+                            room,
+                            message: 'user re-joined the room',
+                        })
+
+                        console.log(
+                            `${socket.userId} ${socket.id} has re-joined Room ${roomId}`
+                        )
+                    }
+                })
+
+                if (!isClient) {
+                    socket.emit('roomJoinData', {
+                        error: 'cannot join the room, game has already started',
+                    })
+                    console.log('cannot join the room, game has aleady started')
+                }
+            }
         })
 
         // on room message
         socket.on('sendRoomMessage', ({ user, roomId, message }) => {
-            console.log(user, roomId, message)
             socket.to(roomId).emit('receiveRoomMessage', {
                 message,
                 sender: user,
             })
         })
 
-        // on start the game
-        socket.on('startGame', ({ roomId }) => {
-            // start round for all room's clients
+        // on start the game / on next round start
+        socket.on('startGame', async ({ roomId }) => {
+            // set roomJoinable status to false and increase round number value by 1
+            const room = await Room.findOne({ roomId })
+            if (!room) return console.log('no room found')
+            if (room.roundNumber >= 5) return console.log('max round reched')
+
+            const roomUpdate = await Room.findByIdAndUpdate(
+                { _id: room._id },
+                { roomJoinable: false, roundNumber: room.roundNumber + 1 },
+                { new: true }
+            )
+
+            // start round and send updated room data to all room's clients
             const character = randomCharacter()
-            socket.nsp.to(roomId).emit('startGameRoom', character)
+            socket.nsp
+                .to(roomId)
+                .emit('startGameRoom', { character, roomUpdate })
 
             // start round and emit end of the round after 10 seconds
-            setTimeout(() => {
-                socket.nsp.to(roomId).emit('endGameRoom')
+            setTimeout(async () => {
+                const res = await Room.findOne({ roomId })
+
+                socket.nsp.to(roomId).emit('endGameRoom', res)
             }, 10000)
+        })
+
+        // on game restart
+        socket.on('restartGame', async ({ roomId }) => {
+            const room = await Room.findOne({ roomId })
+            if (!room) return console.log('no room found')
+
+            const roomRestart = await Room.findByIdAndUpdate(
+                { _id: room._id },
+                { roomJoinable: true, roundNumber: 0 },
+                { new: true }
+            )
+
+            socket.nsp.to(roomId).emit('restartGameRoom', roomRestart)
         })
 
         // disconnection event
