@@ -1,0 +1,92 @@
+import { useEffect, useState } from 'react'
+import { useSelector } from 'react-redux'
+import { useOutletContext } from 'react-router-dom'
+
+const ReviewAnswers = () => {
+    const { roomInfo } = useSelector((state) => state.auth)
+    const [socket] = useOutletContext()
+    const [hideReview, setHideReview] = useState(false)
+
+    // round answers from server, all room's clients
+    const [roundAnswers, setRoundAnswers] = useState([])
+    useEffect(() => {
+        const handleRoundAnswersServer = (data) => {
+            setHideReview(false)
+            console.log('handleRoundAnswersServer! ', data)
+            setRoundAnswers((state) => [...state, data])
+        }
+
+        socket.on('roundAnswersServer', (data) => {
+            handleRoundAnswersServer(data)
+        })
+        return () => socket.off('roundAnswersServer')
+    }, [socket, setRoundAnswers])
+
+    const handleReviewAnswer = (value, index_1, index_2) => {
+        console.log(value, index_1, index_2)
+        if (!value) roundAnswers?.[index_1]?.data?.[index_2].review.push(false)
+        if (value) roundAnswers?.[index_1]?.data?.[index_2].review.pop()
+    }
+
+    const handleSaveReview = () => {
+        console.log('save review')
+        console.log(roundAnswers)
+
+        const dataObject = {
+            roomId: roomInfo?.roomId,
+            roundResults: roundAnswers,
+        }
+
+        // send to da server saved review
+        socket.emit('roundResults', dataObject)
+
+        // hide review page
+        setHideReview(true)
+    }
+
+    return (
+        <>
+            {!hideReview && (
+                <div>
+                    <br />
+                    <h1>Round {roomInfo?.roundNumber} answers</h1>
+                    {roundAnswers?.map((userObject, index_1) => (
+                        <div key={index_1}>
+                            <h1>{userObject?.nickname}</h1>
+
+                            {userObject?.data?.map((item, index_2) => (
+                                <div
+                                    key={index_2}
+                                    style={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                    }}
+                                >
+                                    <h4>
+                                        {item?.category}: {item?.answer}
+                                    </h4>
+
+                                    <input
+                                        type="checkbox"
+                                        defaultChecked
+                                        onChange={(e) => {
+                                            handleReviewAnswer(
+                                                e.target.checked,
+                                                index_1,
+                                                index_2
+                                            )
+                                        }}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                    ))}
+                    <hr />
+                    <button onClick={handleSaveReview}>Save review</button>
+                </div>
+            )}
+        </>
+    )
+}
+
+export default ReviewAnswers

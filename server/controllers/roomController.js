@@ -2,7 +2,7 @@ const Room = require('../models/Room')
 
 const room_create = async (req, res) => {
     try {
-        const { id, categories } = req.body
+        const { id, roundQuantity } = req.body
 
         // check if room with entered id already exists
         const checkRoom = await Room.findOne({ roomId: id })
@@ -17,6 +17,7 @@ const room_create = async (req, res) => {
             roomId: id,
             roomJoinable: true,
             roundNumber: 0,
+            roundQuantity: roundQuantity,
             clients: [],
             gameData: [],
         })

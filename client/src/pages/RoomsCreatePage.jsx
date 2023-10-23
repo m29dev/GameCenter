@@ -1,18 +1,26 @@
 import { useState } from 'react'
 import { useRoomCreateMutation } from '../services/roomService'
 import { useNavigate } from 'react-router-dom'
+import { useDispatch } from 'react-redux'
+import { clearGameInfo } from '../redux/authSlice'
 
 const RoomsCreatePage = () => {
     let categories = ['Panstwa', 'Miasta']
+    const [roundQuantity, setRoundQuantity] = useState(5)
     const [roomName, setRoomName] = useState('')
+    const disptach = useDispatch()
     const navigate = useNavigate()
 
     const [roomCreate] = useRoomCreateMutation()
     const onRoomCreate = async () => {
         try {
-            const res = await roomCreate({ id: roomName, categories }).unwrap()
+            const res = await roomCreate({
+                id: roomName,
+                roundQuantity,
+            }).unwrap()
             console.log(res)
 
+            disptach(clearGameInfo())
             navigate(`/rooms/${res}`)
         } catch (err) {
             console.log(err?.data?.message)
@@ -27,6 +35,17 @@ const RoomsCreatePage = () => {
                     onRoomCreate()
                 }}
             >
+                <h1>Set rounds quantity</h1>
+                <input
+                    min={1}
+                    max={10}
+                    type="number"
+                    value={roundQuantity}
+                    onChange={(e) => {
+                        setRoundQuantity(e.target.value)
+                    }}
+                />
+
                 <h1>Set room name</h1>
                 <input
                     type="text"

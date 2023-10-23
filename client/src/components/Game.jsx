@@ -2,10 +2,11 @@ import { useCallback, useEffect, useState } from 'react'
 import { useGetGameDataMutation } from '../services/roomService'
 import { useDispatch, useSelector } from 'react-redux'
 import { useOutletContext } from 'react-router-dom'
-import { setGameInfo, setRoomInfo } from '../redux/authSlice'
+import { clearGameInfo, setRoomInfo } from '../redux/authSlice'
+import ReviewAnswers from './ReviewAnswers'
 
 const Game = (roomId) => {
-    const { userInfo, roomInfo, gameInfo } = useSelector((state) => state.auth)
+    const { userInfo, roomInfo } = useSelector((state) => state.auth)
     const [socket] = useOutletContext()
     const dispatch = useDispatch()
 
@@ -23,15 +24,19 @@ const Game = (roomId) => {
                     {
                         category: 'Panstwo',
                         answer: country ? country : '',
+                        review: [],
                     },
                     {
                         category: 'Miasto',
                         answer: city ? city : '',
+                        review: [], //boolean, each room's client set this later in the review
                     },
                 ],
             }
+            // send dataObject to the socket.io server
+            socket.emit('roundAnswers', dataObject)
 
-            dispatch(setGameInfo(dataObject))
+            // dispatch(setGameInfo(dataObject))
 
             // const res = await saveGameData(dataObject)
             // console.log(res)
@@ -40,15 +45,13 @@ const Game = (roomId) => {
         } catch (err) {
             console.log(err)
         }
-    }, [roomId, userInfo, country, city, dispatch])
+    }, [roomId, userInfo, country, city, socket])
 
-    const [gameData, setGameData] = useState(null)
     const [getGameData] = useGetGameDataMutation()
     const handleGetGameData = useCallback(async () => {
         try {
             const res = await getGameData(roomId?.roomId).unwrap()
             console.log(res)
-            setGameData(res)
         } catch (err) {
             console.log(err)
         }
@@ -74,6 +77,15 @@ const Game = (roomId) => {
     // on start the game emit startGame to all room's clients
     const onStartGame = () => {
         socket.emit('startGame', { roomId: roomId?.roomId })
+    }
+
+    const onRestartGame = () => {
+        socket.emit('restartGame', { roomId: roomId?.roomId })
+    }
+
+    const onGetResults = () => {
+        // socket.emit('getResults', { roomId: roomId?.roomId })
+        // fetch all game data
     }
 
     // start the game
@@ -119,6 +131,7 @@ const Game = (roomId) => {
             setCity(null)
             console.log('game has been restarted! ', roomRestart)
             dispatch(setRoomInfo(roomRestart))
+            dispatch(clearGameInfo())
             setCharacter(null)
             setGame(false)
         }
@@ -132,7 +145,23 @@ const Game = (roomId) => {
     return (
         <>
             <div className="game-box-center">
-                {!game && <button onClick={onStartGame}>Start</button>}
+                {/* display before each round */}
+                {!game && roomInfo?.roundNumber < roomInfo?.roundQuantity && (
+                    <button onClick={onStartGame}>
+                        Start round{' '}
+                        {roomInfo?.roundNumber < roomInfo?.roundQuantity
+                            ? roomInfo?.roundNumber + 1
+                            : ''}
+                    </button>
+                )}
+
+                {/* display on end of the game */}
+                {!game && roomInfo?.roundNumber >= roomInfo?.roundQuantity && (
+                    <button onClick={onRestartGame}>ReStart</button>
+                )}
+                {!game && roomInfo?.roundNumber >= roomInfo?.roundQuantity && (
+                    <button onClick={onGetResults}>Get results</button>
+                )}
 
                 {/* {!game && gameData && (
                     // round results
@@ -149,8 +178,7 @@ const Game = (roomId) => {
                         ))}
                     </div>
                 )} */}
-
-                {!game && gameInfo && (
+                {/* {!game && gameInfo && roomInfo?.roundNumber > 0 && (
                     // round results
                     <div>
                         <br />
@@ -163,6 +191,11 @@ const Game = (roomId) => {
                             </div>
                         ))}
                     </div>
+                )} */}
+
+                {!game && roomInfo?.roundNumber > 0 && (
+                    // round results
+                    <ReviewAnswers></ReviewAnswers>
                 )}
 
                 {game && (

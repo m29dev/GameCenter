@@ -9,7 +9,7 @@ const http = require('http')
 const dbConnect = require('./config/DatabaseConfig')
 const Room = require('./models/Room')
 const room = require('./models/Room')
-const { randomCharacter } = require('./config/GameConfig')
+const { randomCharacter, saveRoundResults } = require('./config/GameConfig')
 
 dotenv.config()
 app.use(cors())
@@ -132,7 +132,8 @@ io.on('connection', async (socket) => {
             // set roomJoinable status to false and increase round number value by 1
             const room = await Room.findOne({ roomId })
             if (!room) return console.log('no room found')
-            if (room.roundNumber >= 5) return console.log('max round reched')
+            if (room.roundNumber >= room?.roundQuantity)
+                return console.log('max round reched')
 
             const roomUpdate = await Room.findByIdAndUpdate(
                 { _id: room._id },
@@ -152,6 +153,21 @@ io.on('connection', async (socket) => {
 
                 socket.nsp.to(roomId).emit('endGameRoom', res)
             }, 10000)
+        })
+
+        // on round answers
+        socket.on('roundAnswers', (dataObject) => {
+            console.log('round answers: ', dataObject)
+
+            socket.nsp
+                .to(dataObject?.roomId)
+                .emit('roundAnswersServer', dataObject)
+        })
+
+        // on round results (reviewed answers)
+        socket.on('roundResults', (dataObject) => {
+            // save round data to da database
+            saveRoundResults(dataObject?.roomId, dataObject?.roundResults)
         })
 
         // on game restart

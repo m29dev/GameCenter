@@ -13,6 +13,10 @@ const roomSchema = mongoose.Schema({
         type: Number,
         required: true,
     },
+    roundQuantity: {
+        type: Number,
+        required: true,
+    },
     clients: {
         type: Array,
         required: true,

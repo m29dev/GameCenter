@@ -43,6 +43,17 @@ export const authSlice = createSlice({
             state.gameInfo = action.payload
             localStorage.setItem('gameInfo', JSON.stringify(action.payload))
         },
+        addGameInfoData: (state, action) => {
+            let addData
+            if (!state.gameInfo) {
+                addData = { data: [] }
+                addData.data.push(action.payload)
+            } else {
+                addData = state.gameInfo.data.push(action.payload)
+            }
+            state.gameInfo = addData
+            localStorage.setItem('gameInfo', JSON.stringify(addData))
+        },
         clearGameInfo: (state) => {
             state.gameInfo = null
             localStorage.removeItem('gameInfo')
@@ -56,6 +67,7 @@ export const {
     setRoomInfo,
     clearRoomInfo,
     setGameInfo,
+    addGameInfoData,
     clearGameInfo,
 } = authSlice.actions
 export default authSlice.reducer
