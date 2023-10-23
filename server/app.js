@@ -13,6 +13,7 @@ const {
     randomCharacter,
     saveRoundResults,
     calculateGamePoints,
+    clientDisconnect,
 } = require('./config/GameConfig')
 
 dotenv.config()
@@ -195,6 +196,7 @@ io.on('connection', async (socket) => {
 
         // disconnection event
         socket.on('disconnect', () => {
+            clientDisconnect(socket.userId)
             console.log('user disconnected: ', socket.userId)
         })
     } catch (err) {

@@ -29,12 +29,21 @@ const ReviewAnswers = () => {
     }
 
     const handleSaveReview = () => {
-        console.log('save review')
-        console.log(roundAnswers)
+        let fixRoundAnswers = [...roundAnswers]
+        fixRoundAnswers.map((roundAnswer) => {
+            roundAnswer.data.map((userAnswer) => {
+                if (userAnswer.answer === '') {
+                    userAnswer.review.push(false)
+                    console.log('found empty answer')
+                }
+            })
+        })
+
+        console.log(fixRoundAnswers)
 
         const dataObject = {
             roomId: roomInfo?.roomId,
-            roundResults: roundAnswers,
+            roundResults: fixRoundAnswers,
         }
 
         // send to da server saved review
@@ -68,7 +77,9 @@ const ReviewAnswers = () => {
 
                                     <input
                                         type="checkbox"
-                                        defaultChecked
+                                        defaultChecked={
+                                            item?.answer === '' ? false : true
+                                        }
                                         onChange={(e) => {
                                             handleReviewAnswer(
                                                 e.target.checked,

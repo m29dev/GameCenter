@@ -108,18 +108,19 @@ const Game = (roomId) => {
         return () => socket.off('startGameRoom', handleStartGame)
     }, [socket, timer, setCharacter, setGame, dispatch])
 
+    const [gamePoints, setGamePoints] = useState(null)
+
     // on gamePointsServer
     useEffect(() => {
         const handleGamePointsServer = (data) => {
-            console.log('GAME POINTS: ')
-            console.log(data)
+            setGamePoints(data)
         }
 
         socket.on('gamePointsServer', (data) => {
             handleGamePointsServer(data)
         })
         return () => socket.off('gamePointsServer', handleGamePointsServer)
-    }, [socket, timer, setCharacter, setGame, dispatch])
+    }, [socket])
 
     // end the game
     useEffect(() => {
@@ -147,6 +148,7 @@ const Game = (roomId) => {
             dispatch(setRoomInfo(roomRestart))
             dispatch(clearGameInfo())
             setCharacter(null)
+            setGamePoints(null)
             setGame(false)
         }
 
@@ -176,6 +178,14 @@ const Game = (roomId) => {
                 {!game && roomInfo?.roundNumber >= roomInfo?.roundQuantity && (
                     <button onClick={onGetResults}>Get results</button>
                 )}
+                {!game &&
+                    roomInfo?.roundNumber >= roomInfo?.roundQuantity &&
+                    gamePoints &&
+                    gamePoints?.map((client, index) => (
+                        <h1 key={index}>
+                            {client.nickname}: {client.points}pkt
+                        </h1>
+                    ))}
 
                 {/* {!game && gameData && (
                     // round results

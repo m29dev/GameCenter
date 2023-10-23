@@ -127,7 +127,7 @@ const calculateGamePoints = async (roomId) => {
         // calculate points for each round for each player
         room.clients.forEach((client) => {
             const clientPointsObject = {
-                client: client,
+                nickname: client,
                 points: 0,
             }
             console.log('-----------------------------------------------------')
@@ -163,8 +163,8 @@ const calculateGamePoints = async (roomId) => {
                                                 anotherUsersRoundObject.data.forEach(
                                                     (othersAnswerObject) => {
                                                         if (
-                                                            othersAnswerObject.answer ===
-                                                            answerObject.answer
+                                                            othersAnswerObject.answer.toLowerCase() ===
+                                                            answerObject.answer.toLowerCase()
                                                         ) {
                                                             foundSameAnswer = true
                                                         }
@@ -209,8 +209,29 @@ const calculateGamePoints = async (roomId) => {
     }
 }
 
+const clientDisconnect = async (client) => {
+    try {
+        const rooms = await Room.find({})
+
+        rooms.forEach((room) => {
+            room.clients.forEach(async (roomClient) => {
+                if (roomClient === client) {
+                    updateClients = room.clients.filter((e) => e !== client)
+                    await Room.findByIdAndUpdate(
+                        { _id: room._id },
+                        { clients: updateClients }
+                    )
+                }
+            })
+        })
+    } catch (err) {
+        console.log(err)
+    }
+}
+
 module.exports = {
     randomCharacter,
     saveRoundResults,
     calculateGamePoints,
+    clientDisconnect,
 }
