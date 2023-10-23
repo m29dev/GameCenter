@@ -9,7 +9,11 @@ const http = require('http')
 const dbConnect = require('./config/DatabaseConfig')
 const Room = require('./models/Room')
 const room = require('./models/Room')
-const { randomCharacter, saveRoundResults } = require('./config/GameConfig')
+const {
+    randomCharacter,
+    saveRoundResults,
+    calculateGamePoints,
+} = require('./config/GameConfig')
 
 dotenv.config()
 app.use(cors())
@@ -170,6 +174,11 @@ io.on('connection', async (socket) => {
             saveRoundResults(dataObject?.roomId, dataObject?.roundResults)
         })
 
+        socket.on('gamePoints', async (roomId) => {
+            const gamePoints = await calculateGamePoints(roomId.roomId)
+            socket.nsp.to(roomId?.roomId).emit('gamePointsServer', gamePoints)
+        })
+
         // on game restart
         socket.on('restartGame', async ({ roomId }) => {
             const room = await Room.findOne({ roomId })
@@ -177,7 +186,7 @@ io.on('connection', async (socket) => {
 
             const roomRestart = await Room.findByIdAndUpdate(
                 { _id: room._id },
-                { roomJoinable: true, roundNumber: 0 },
+                { roomJoinable: true, roundNumber: 0, gameData: [] },
                 { new: true }
             )
 

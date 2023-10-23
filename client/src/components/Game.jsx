@@ -86,6 +86,7 @@ const Game = (roomId) => {
     const onGetResults = () => {
         // socket.emit('getResults', { roomId: roomId?.roomId })
         // fetch all game data
+        socket.emit('gamePoints', roomId)
     }
 
     // start the game
@@ -105,6 +106,19 @@ const Game = (roomId) => {
             handleStartGame(data)
         })
         return () => socket.off('startGameRoom', handleStartGame)
+    }, [socket, timer, setCharacter, setGame, dispatch])
+
+    // on gamePointsServer
+    useEffect(() => {
+        const handleGamePointsServer = (data) => {
+            console.log('GAME POINTS: ')
+            console.log(data)
+        }
+
+        socket.on('gamePointsServer', (data) => {
+            handleGamePointsServer(data)
+        })
+        return () => socket.off('gamePointsServer', handleGamePointsServer)
     }, [socket, timer, setCharacter, setGame, dispatch])
 
     // end the game
@@ -139,7 +153,7 @@ const Game = (roomId) => {
         socket.on('restartGameRoom', (roomRestart) => {
             handleRestartGame(roomRestart)
         })
-        return () => socket.off('startGameRoom', handleRestartGame)
+        return () => socket.off('restartGameRoom', handleRestartGame)
     }, [socket, timer, setCharacter, setGame, dispatch])
 
     return (

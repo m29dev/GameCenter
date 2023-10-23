@@ -62,9 +62,9 @@ const saveRoundResults = async (roomId, roundResults) => {
                                             roundItem.category
                                         ) {
                                             // userItem?.review?.push(...roundItem?.review)
-                                            roundItem.review = [
-                                                ...roundItem?.review,
-                                                ...userItem?.review,
+                                            userItem.review = [
+                                                ...userItem.review,
+                                                ...roundItem.review,
                                             ]
                                         }
                                     })
@@ -77,7 +77,7 @@ const saveRoundResults = async (roomId, roundResults) => {
             if (roundArrayExists) {
                 await Room.findByIdAndUpdate(
                     { _id: room._id },
-                    { gameData: roundResults }
+                    { gameData: room.gameData }
                 )
             }
 
@@ -111,9 +111,99 @@ const saveRoundResults = async (roomId, roundResults) => {
 
             await Room.findByIdAndUpdate(
                 { _id: room._id },
-                { gameData: gameDataRoundObject }
+                { gameData: [gameDataRoundObject] }
             )
         }
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+const calculateGamePoints = async (roomId) => {
+    try {
+        const room = await Room.findOne({ roomId })
+        const gamePoints = []
+
+        // calculate points for each round for each player
+        room.clients.forEach((client) => {
+            const clientPointsObject = {
+                client: client,
+                points: 0,
+            }
+            console.log('-----------------------------------------------------')
+            console.log('POINTS REVIEW FOR ', client)
+            room.gameData.forEach((roundObject) => {
+                roundObject.roundData.forEach((roundResults) => {
+                    if (roundResults.nickname === client) {
+                        roundResults.data.forEach((answerObject) => {
+                            // if EMPTY ANSWER automatically 0 points
+                            if (answerObject.answer === ('' || null)) {
+                                // console.log('__________')
+                                // console.log(answerObject.answer, ': 0 points')
+                            } else {
+                                // if ERROR REVIEWS more than half of all clients automatically 0 points
+                                if (
+                                    answerObject.review.length >=
+                                    room.clients.length / 2
+                                ) {
+                                    // console.log('__________')
+                                    // console.log(
+                                    //     answerObject.answer,
+                                    //     ': 0 points'
+                                    // )
+                                } else {
+                                    // if client's answer is the same as one of the other's one => 10 points
+                                    let foundSameAnswer = false
+                                    roundObject.roundData.forEach(
+                                        (anotherUsersRoundObject) => {
+                                            if (
+                                                anotherUsersRoundObject.nickname !==
+                                                client
+                                            ) {
+                                                anotherUsersRoundObject.data.forEach(
+                                                    (othersAnswerObject) => {
+                                                        if (
+                                                            othersAnswerObject.answer ===
+                                                            answerObject.answer
+                                                        ) {
+                                                            foundSameAnswer = true
+                                                        }
+                                                    }
+                                                )
+                                            }
+                                        }
+                                    )
+
+                                    if (foundSameAnswer) {
+                                        // console.log('__________')
+                                        // console.log(
+                                        //     answerObject.answer,
+                                        //     ': 10 points'
+                                        // )
+
+                                        clientPointsObject.points += 10
+                                    } else {
+                                        // console.log('__________')
+                                        // console.log(
+                                        //     answerObject.answer,
+                                        //     ': 15 points (BONUS 5 points)'
+                                        // )
+
+                                        clientPointsObject.points += 15
+                                    }
+                                }
+                            }
+                        })
+                    }
+                })
+            })
+
+            gamePoints.push(clientPointsObject)
+        })
+
+        console.log(gamePoints)
+
+        return gamePoints
     } catch (err) {
         console.log(err)
     }
@@ -122,4 +212,5 @@ const saveRoundResults = async (roomId, roundResults) => {
 module.exports = {
     randomCharacter,
     saveRoundResults,
+    calculateGamePoints,
 }
