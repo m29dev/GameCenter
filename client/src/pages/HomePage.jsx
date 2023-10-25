@@ -1,46 +1,131 @@
 import { useEffect, useState } from 'react'
+import { Button } from 'react-bootstrap'
 import { useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
+import { useRoomCreateMutation } from '../services/roomService'
+import { useDispatch } from 'react-redux'
+import { clearGameInfo } from '../redux/authSlice'
 
 const HomePage = () => {
     const { userInfo } = useSelector((state) => state.auth)
-    const [room, setRoom] = useState('')
     const navigate = useNavigate()
+    const disptach = useDispatch()
 
+    // init config
     useEffect(() => {
         if (!userInfo) navigate('/auth')
     })
 
+    // join room config
+    const [room, setRoom] = useState('')
+    const handleJoinRoom = (e) => {
+        e.preventDefault()
+        if (room === '') return
+        navigate(`/rooms/${room}`)
+    }
+
+    // create room config
+    // handle round quantity
+    const [roundQuantity, setRoundQuantity] = useState(1)
+    const increaseQuantity = () => {
+        if (roundQuantity < 10) {
+            setRoundQuantity((state) => state + 1)
+        }
+    }
+    const decreaseQuantity = () => {
+        if (roundQuantity > 1) {
+            setRoundQuantity((state) => state - 1)
+        }
+    }
+
+    const [roomName, setRoomName] = useState('')
+    const [roomCreate] = useRoomCreateMutation()
+    const onRoomCreate = async () => {
+        try {
+            const res = await roomCreate({
+                id: roomName,
+                roundQuantity,
+            }).unwrap()
+            console.log(res)
+
+            disptach(clearGameInfo())
+            navigate(`/rooms/${res}`)
+        } catch (err) {
+            console.log(err?.data?.message)
+            window.alert(err?.data?.message)
+        }
+    }
+
     return (
         <>
-            <form>
+            <div className="page-container">
                 <h1>Welcome {userInfo?.nickname}</h1>
-                <button
-                    onClick={(e) => {
+
+                <hr />
+
+                {/* join room */}
+                <label>Join Room</label>
+                <form className="form-container" onSubmit={handleJoinRoom}>
+                    <input
+                        className="form-container-input"
+                        type="text"
+                        placeholder="Room ID"
+                        onChange={(e) => {
+                            setRoom(e.target.value)
+                        }}
+                        value={room}
+                    />
+                    <Button variant="dark" className="form-container-btn">
+                        Join room
+                    </Button>
+                </form>
+
+                <hr />
+
+                {/* create room  */}
+                <label>Create Room</label>
+                <div className="round-box">
+                    <p>Round quantity</p>
+                    <div className="round-quantity-box">
+                        <Button variant="dark" onClick={decreaseQuantity}>
+                            -
+                        </Button>
+                        <h1>{roundQuantity}</h1>
+                        <Button variant="dark" onClick={increaseQuantity}>
+                            +
+                        </Button>
+                    </div>
+                </div>
+
+                <form
+                    className="form-container"
+                    onSubmit={(e) => {
                         e.preventDefault()
-                        navigate('/rooms/create')
+                        onRoomCreate()
                     }}
                 >
-                    Create room
-                </button>
-            </form>
-            <hr />
-            <form
-                onSubmit={(e) => {
-                    e.preventDefault()
-                    navigate(`/rooms/${room}`)
-                }}
-            >
-                <input
-                    type="text"
-                    placeholder="Room ID"
-                    onChange={(e) => {
-                        setRoom(e.target.value)
-                    }}
-                    value={room}
-                />
-                <button>Join room</button>
-            </form>
+                    <input
+                        className="form-container-input"
+                        type="text"
+                        placeholder="Room ID"
+                        onChange={(e) => {
+                            setRoomName(e.target.value)
+                        }}
+                        value={roomName}
+                    />
+
+                    {/* for submit feature */}
+                    <button style={{ display: 'none' }}></button>
+
+                    <Button
+                        variant="dark"
+                        disabled={roomName ? false : true}
+                        className="form-container-btn"
+                    >
+                        Create room
+                    </Button>
+                </form>
+            </div>
         </>
     )
 }

@@ -3,6 +3,7 @@ import { useUserConnectMutation } from '../services/authService'
 import { useDispatch, useSelector } from 'react-redux'
 import { setUserInfo } from '../redux/authSlice'
 import { useNavigate } from 'react-router-dom'
+import { Button } from 'react-bootstrap'
 
 const AuthPage = () => {
     const [nickname, setNickname] = useState('')
@@ -35,16 +36,20 @@ const AuthPage = () => {
     return (
         <>
             <h1>Państwa Miasta</h1>
-            <h5>set Your nickname: </h5>
-            <form onSubmit={onConnect}>
+
+            <form className="form-container" onSubmit={onConnect}>
                 <input
+                    className="form-container-input"
                     type="text"
+                    placeholder="Set nickname"
                     onChange={(e) => {
                         setNickname(e?.target?.value)
                     }}
                     value={nickname}
                 />
-                <button disabled={nickname ? false : true}>Connect</button>
+                <Button variant="dark" className="form-container-btn">
+                    Connect
+                </Button>
             </form>
         </>
     )

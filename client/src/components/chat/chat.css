@@ -1,0 +1,25 @@
+.chat-box {
+    width: 400px;
+    max-width: 400px;
+    height: calc(100% - 50px);
+
+    /* border: 1px solid rgb(95, 95, 95); */
+    overflow-x: auto;
+    text-wrap: wrap;
+}
+.chat-text {
+    inline-size: 382px;
+    overflow-wrap: break-word;
+}
+.chat-text-server {
+    font-size: 14px;
+    color: gray;
+    inline-size: 382px;
+    overflow-wrap: break-word;
+}
+
+@media screen and (max-width: 500px) {
+    /* .chat-display {
+        display: none;
+    } */
+}

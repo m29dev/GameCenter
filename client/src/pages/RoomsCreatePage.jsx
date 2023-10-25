@@ -3,13 +3,21 @@ import { useRoomCreateMutation } from '../services/roomService'
 import { useNavigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
 import { clearGameInfo } from '../redux/authSlice'
+import { Button } from 'react-bootstrap'
 
 const RoomsCreatePage = () => {
     let categories = ['Panstwa', 'Miasta']
-    const [roundQuantity, setRoundQuantity] = useState(5)
+    const [roundQuantity, setRoundQuantity] = useState(1)
     const [roomName, setRoomName] = useState('')
     const disptach = useDispatch()
     const navigate = useNavigate()
+
+    const min = 1
+    const max = 10
+    const handleChange = (event) => {
+        const value = Math.max(min, Math.min(max, Number(event.target.value)))
+        setRoundQuantity(value)
+    }
 
     const [roomCreate] = useRoomCreateMutation()
     const onRoomCreate = async () => {
@@ -29,34 +37,45 @@ const RoomsCreatePage = () => {
     }
     return (
         <>
+            <form className="form-container">
+                <input
+                    className="form-container-input"
+                    type="number"
+                    placeholder="Rounds quantity (1-10)"
+                    value={roundQuantity}
+                    onChange={handleChange}
+                />
+            </form>
+
             <form
+                className="form-container"
                 onSubmit={(e) => {
                     e.preventDefault()
                     onRoomCreate()
                 }}
             >
-                <h1>Set rounds quantity</h1>
                 <input
-                    min={1}
-                    max={10}
-                    type="number"
-                    value={roundQuantity}
-                    onChange={(e) => {
-                        setRoundQuantity(e.target.value)
-                    }}
-                />
-
-                <h1>Set room name</h1>
-                <input
+                    className="form-container-input"
                     type="text"
+                    placeholder="Room ID"
                     onChange={(e) => {
                         setRoomName(e.target.value)
                     }}
                     value={roomName}
                 />
 
-                <button disabled={roomName ? false : true}>Start Game</button>
+                {/* for submit feature */}
+                <button style={{ display: 'none' }}></button>
+
+                <Button
+                    variant="dark"
+                    disabled={roomName ? false : true}
+                    className="form-container-btn"
+                >
+                    Create room
+                </Button>
             </form>
+
             <hr />
 
             {categories?.map((item, index) => (

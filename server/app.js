@@ -76,22 +76,28 @@ io.on('connection', async (socket) => {
 
                     socket.emit('roomJoinData', {
                         room,
-                        message: 'user joined the room',
+                        message: `${socket.userId} joined the room`,
+                    })
+                    socket.nsp.to(roomId).emit('roomJoinMsg', {
+                        message: `${socket.userId}'s joined the room`,
                     })
 
                     console.log(
-                        `${socket.userId} ${socket.id} has joined Room ${roomId}`
+                        `${socket.userId} ${socket.id}'s joined Room ${roomId}`
                     )
                 }
 
                 if (isClient) {
                     socket.emit('roomJoinData', {
                         room,
-                        message: 'user re-joined the room',
+                        message: `${socket.userId}'s rejoined the room`,
+                    })
+                    socket.nsp.to(roomId).emit('roomJoinMsg', {
+                        message: `${socket.userId}'s rejoined the room`,
                     })
 
                     console.log(
-                        `${socket.userId} ${socket.id} has re-joined Room ${roomId}`
+                        `${socket.userId} ${socket.id}'s rejoined Room ${roomId}`
                     )
                 }
             }
@@ -106,11 +112,14 @@ io.on('connection', async (socket) => {
 
                         socket.emit('roomJoinData', {
                             room,
-                            message: 'user re-joined the room',
+                            message: `${socket.userId}'s rejoined the room`,
+                        })
+                        socket.nsp.to(roomId).emit('roomJoinMsg', {
+                            message: `${socket.userId}'s rejoined the room`,
                         })
 
                         console.log(
-                            `${socket.userId} ${socket.id} has re-joined Room ${roomId}`
+                            `${socket.userId} ${socket.id}'s rejoined Room ${roomId}`
                         )
                     }
                 })
@@ -151,13 +160,12 @@ io.on('connection', async (socket) => {
             socket.nsp
                 .to(roomId)
                 .emit('startGameRoom', { character, roomUpdate })
+        })
 
-            // start round and emit end of the round after 10 seconds
-            setTimeout(async () => {
-                const res = await Room.findOne({ roomId })
-
-                socket.nsp.to(roomId).emit('endGameRoom', res)
-            }, 10000)
+        // on round answers
+        socket.on('endGame', async ({ roomId }) => {
+            const res = await Room.findOne({ roomId })
+            socket.nsp.to(roomId).emit('endGameRoom', res)
         })
 
         // on round answers
@@ -196,7 +204,7 @@ io.on('connection', async (socket) => {
 
         // disconnection event
         socket.on('disconnect', () => {
-            clientDisconnect(socket.userId)
+            // clientDisconnect(socket.userId)
             console.log('user disconnected: ', socket.userId)
         })
     } catch (err) {

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
-import Chat from '../components/chat'
-import Game from '../components/Game'
+import Chat from '../components/chat/Chat'
+import Game from '../components/game/Game'
 import './room.css'
 import { useDispatch } from 'react-redux'
 import { setRoomInfo } from '../redux/authSlice'
@@ -9,6 +9,7 @@ import { setRoomInfo } from '../redux/authSlice'
 const RoomsIdPage = () => {
     const [socket] = useOutletContext()
     const [roomId, setRoomId] = useState(null)
+    const [joinRoomMsg, setJoinRoomMsg] = useState(null)
     const params = useParams()
     const dispatch = useDispatch()
     const navigate = useNavigate()
@@ -33,7 +34,7 @@ const RoomsIdPage = () => {
     useEffect(() => {
         const handleRoomJoinData = (data) => {
             if (data?.message) {
-                console.log(data?.message)
+                setJoinRoomMsg(data?.message)
                 dispatch(setRoomInfo(data?.room))
             }
 
@@ -53,12 +54,16 @@ const RoomsIdPage = () => {
             <div className="room-box">
                 {/* leftbar */}
                 <div className="room-box-leftbar">
-                    <Chat roomId={roomId}></Chat>
+                    <Chat roomId={roomId} joinRoomMsg={joinRoomMsg}></Chat>
                 </div>
 
-                {/* center  */}
-                <h1>Room ID: {roomId}</h1>
-                <Game roomId={roomId}></Game>
+                <div className="room-box-center">
+                    {/* roomnavbar */}
+                    {/* <div className="room-navbar"></div> */}
+
+                    {/* center  */}
+                    <Game roomId={roomId}></Game>
+                </div>
             </div>
         </>
     )

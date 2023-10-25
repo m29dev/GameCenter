@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
+import { Button } from 'react-bootstrap'
 import { useSelector } from 'react-redux'
 import { useOutletContext } from 'react-router-dom'
+import './review.css'
 
 const ReviewAnswers = () => {
     const { roomInfo } = useSelector((state) => state.auth)
@@ -56,9 +58,13 @@ const ReviewAnswers = () => {
     return (
         <>
             {!hideReview && (
-                <div>
+                <div className="review-box">
                     <br />
-                    <h1>Round {roomInfo?.roundNumber} answers</h1>
+
+                    <h2>Review answers - round {roomInfo?.roundNumber}</h2>
+
+                    <hr />
+
                     {roundAnswers?.map((userObject, index_1) => (
                         <div key={index_1}>
                             <h1>{userObject?.nickname}</h1>
@@ -90,10 +96,14 @@ const ReviewAnswers = () => {
                                     />
                                 </div>
                             ))}
+
+                            <br />
                         </div>
                     ))}
                     <hr />
-                    <button onClick={handleSaveReview}>Save review</button>
+                    <Button variant="dark" onClick={handleSaveReview}>
+                        Send review
+                    </Button>
                 </div>
             )}
         </>
