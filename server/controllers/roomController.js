@@ -18,6 +18,7 @@ const room_create = async (req, res) => {
             roomJoinable: true,
             roundNumber: 0,
             roundQuantity: roundQuantity,
+            roundReviews: [],
             clients: [],
             gameData: [],
         })

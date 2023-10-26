@@ -1,13 +1,15 @@
 .chat-box {
     width: 400px;
     max-width: 400px;
-    height: calc(100% - 50px);
+    /* height: calc(100% - 50px); */
+    height: calc(100% - 40px - 50px);
 
     /* border: 1px solid rgb(95, 95, 95); */
     overflow-x: auto;
     text-wrap: wrap;
 }
 .chat-text {
+    font-size: 16px;
     inline-size: 382px;
     overflow-wrap: break-word;
 }
@@ -18,8 +20,15 @@
     overflow-wrap: break-word;
 }
 
+.chat-navbar {
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 @media screen and (max-width: 500px) {
-    /* .chat-display {
-        display: none;
-    } */
+    .chat-box {
+        width: 100%;
+    }
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './chat.css'
 import { useSelector } from 'react-redux'
 import { useOutletContext } from 'react-router-dom'
@@ -15,7 +15,6 @@ const Chat = (data) => {
     // send meesage
     const handleSendMessage = (e) => {
         e.preventDefault()
-
         if (message === '') return
 
         setChatData((data) => [
@@ -60,8 +59,17 @@ const Chat = (data) => {
         return () => socket.off()
     }, [socket])
 
+    // on chat data update scoll chat
+    const chatBox = useRef()
+    useEffect(() => {
+        chatBox.current?.scrollIntoView({ behavior: 'smooth' })
+    }, [chatData])
+
     return (
         <>
+            {/* chat navbar */}
+            <div className="chat-navbar">Chat</div>
+
             {/* chat box */}
             <div className="chat-box">
                 {chatData?.map((msg, index) =>
@@ -75,6 +83,8 @@ const Chat = (data) => {
                         </h4>
                     )
                 )}
+
+                <div ref={chatBox}></div>
             </div>
 
             {/* message box */}

@@ -10,9 +10,11 @@
 }
 .game-box {
     height: 100%;
+    max-width: 500px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
+    margin: auto;
 }
 
 .game-navbar {
@@ -27,6 +29,7 @@
     justify-content: space-between;
     align-items: center;
     padding: 0px 12px;
+    padding-right: 47px;
 }
 
 label {

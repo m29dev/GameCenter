@@ -1,7 +1,6 @@
 import { useSelector } from 'react-redux'
 import './App.css'
 import { Outlet } from 'react-router-dom'
-import Navbar from './components/navbar/NavbarComponent'
 import Container from 'react-bootstrap/Container'
 
 //init socket io
@@ -17,7 +16,6 @@ function App() {
 
     return (
         <>
-            <Navbar></Navbar>
             <Container className="container-box">
                 <Outlet context={[socket]}></Outlet>
             </Container>

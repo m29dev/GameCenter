@@ -5,6 +5,7 @@ import Game from '../components/game/Game'
 import './room.css'
 import { useDispatch } from 'react-redux'
 import { setRoomInfo } from '../redux/authSlice'
+import { BsFillChatDotsFill } from 'react-icons/bs'
 
 const RoomsIdPage = () => {
     const [socket] = useOutletContext()
@@ -13,6 +14,8 @@ const RoomsIdPage = () => {
     const params = useParams()
     const dispatch = useDispatch()
     const navigate = useNavigate()
+
+    const [chatDisplayToggle, setChatDisplayToggle] = useState(false)
 
     // room config
     const joinRoom = useCallback(async () => {
@@ -49,19 +52,35 @@ const RoomsIdPage = () => {
         return () => socket.off('roomJoinData', handleRoomJoinData)
     }, [socket, dispatch, navigate])
 
+    const handleChatToggle = () => {
+        setChatDisplayToggle(!chatDisplayToggle)
+
+        console.log(chatDisplayToggle)
+    }
+
     return (
         <>
             <div className="room-box">
+                {/* on mobile screens */}
+                <div className="chat-display-toggle" onClick={handleChatToggle}>
+                    <BsFillChatDotsFill
+                        color="FFFFFFDE"
+                        style={{ width: '23px', height: '23px' }}
+                    ></BsFillChatDotsFill>
+                </div>
+
                 {/* leftbar */}
-                <div className="room-box-leftbar">
+                <div
+                    className={
+                        chatDisplayToggle
+                            ? 'room-box-leftbar-mobile'
+                            : 'room-box-leftbar'
+                    }
+                >
                     <Chat roomId={roomId} joinRoomMsg={joinRoomMsg}></Chat>
                 </div>
 
                 <div className="room-box-center">
-                    {/* roomnavbar */}
-                    {/* <div className="room-navbar"></div> */}
-
-                    {/* center  */}
                     <Game roomId={roomId}></Game>
                 </div>
             </div>

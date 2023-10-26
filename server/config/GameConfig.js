@@ -21,17 +21,44 @@ const characters = [
     'S',
     'T',
     'U',
-    'V',
+    // 'V',
     'W',
     // 'X',
-    'Y',
+    // 'Y',
     'Z',
 ]
 
 const randomCharacter = () => {
-    let randomNum = Math.trunc(Math.random() * 24)
+    let randomNum = Math.trunc(Math.random() * 22)
     let character = characters[randomNum]
     return character
+}
+
+const startGameConfig = async (roomId) => {
+    try {
+        // set roomJoinable status to false and increase round number value by 1
+        const room = await Room.findOne({ roomId })
+        if (!room) return console.log('no room found')
+        if (room.roundNumber >= room?.roundQuantity)
+            return console.log('max round reched')
+
+        const roomUpdate = await Room.findByIdAndUpdate(
+            { _id: room._id },
+            { roomJoinable: false, roundNumber: room.roundNumber + 1 },
+            { new: true }
+        )
+        const character = randomCharacter()
+        const startGameObject = {
+            character,
+            roomUpdate,
+        }
+
+        console.log('start game config: ', startGameObject)
+
+        return startGameObject
+    } catch (err) {
+        console.log(err)
+    }
 }
 
 const saveRoundResults = async (roomId, roundResults) => {
@@ -114,6 +141,69 @@ const saveRoundResults = async (roomId, roundResults) => {
                 { gameData: [gameDataRoundObject] }
             )
         }
+    } catch (err) {
+        console.log(err)
+    }
+}
+
+const saveClientRoundReview = async (roomId, userId) => {
+    try {
+        const room = await Room.findOne({ roomId })
+
+        // get current round
+        currentRound = room?.roundNumber
+
+        // add data to the roundReview arr, to the current round object
+        // {round: x, reviews: ['userId']}
+
+        // check if current round reviews arr exists
+        let currRoundReviewsExists = false
+        room?.roundReviews?.forEach(async (reviewObject) => {
+            if (reviewObject?.round === currentRound) {
+                // current round reviews arr exists, so update this one
+                currRoundReviewsExists = true
+
+                let alreadyReviewed = false
+                reviewObject?.reviews.forEach((client) => {
+                    if (client === userId) {
+                        alreadyReviewed = true
+                    }
+                })
+
+                if (!alreadyReviewed) {
+                    reviewObject?.reviews.push(`${userId}`)
+                }
+            }
+        })
+
+        if (!currRoundReviewsExists) {
+            // current round reviews arr does not exist, so create one
+            const reviewObject = {
+                round: currentRound,
+                reviews: [],
+            }
+            reviewObject.reviews.push(`${userId}`)
+            room?.roundReviews.push(reviewObject)
+        }
+
+        const savedRoom = await Room.findByIdAndUpdate(
+            { _id: room._id },
+            { roundReviews: room.roundReviews },
+            { new: true }
+        )
+
+        console.log('1', savedRoom.clients)
+        console.log('2', savedRoom.roundReviews[currentRound - 1].reviews)
+
+        // check if all active players have sent their reviews, if so set var to true and next round will be played
+        let allReviewsSend = false
+        if (
+            savedRoom.roundReviews[currentRound - 1].reviews.length ===
+            savedRoom.clients.length
+        ) {
+            allReviewsSend = true
+        }
+        return allReviewsSend
     } catch (err) {
         console.log(err)
     }
@@ -231,7 +321,9 @@ const clientDisconnect = async (client) => {
 
 module.exports = {
     randomCharacter,
+    startGameConfig,
     saveRoundResults,
+    saveClientRoundReview,
     calculateGamePoints,
     clientDisconnect,
 }

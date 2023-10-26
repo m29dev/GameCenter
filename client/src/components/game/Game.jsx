@@ -172,17 +172,20 @@ const Game = (data) => {
                     {/* leftside */}
                     <div>
                         {/* display before each round */}
+
+                        {/* current round */}
+                        {roomInfo?.roundNumber > 0 && (
+                            <div>
+                                Round {roomInfo?.roundNumber}/
+                                {roomInfo?.roundQuantity}
+                            </div>
+                        )}
+
                         {!game &&
-                            roomInfo?.roundNumber < roomInfo?.roundQuantity && (
+                            roomInfo?.roundNumber < roomInfo?.roundQuantity &&
+                            roomInfo?.roundNumber === 0 && (
                                 <Button variant="dark" onClick={onStartGame}>
-                                    {roomInfo?.roundNumber === 0
-                                        ? `Start game`
-                                        : roomInfo?.roundNumber <
-                                          roomInfo?.roundQuantity
-                                        ? `Start round ${
-                                              roomInfo?.roundNumber + 1
-                                          }`
-                                        : ``}
+                                    Start Game
                                 </Button>
                             )}
 
@@ -191,16 +194,11 @@ const Game = (data) => {
                                 <Button variant="dark" onClick={onRestartGame}>
                                     Restart game
                                 </Button>
-                                <Button variant="dark" onClick={onGetResults}>
+                                {/* <Button variant="dark" onClick={onGetResults}>
                                     Get results
-                                </Button>
+                                </Button> */}
                             </>
                         )}
-                    </div>
-
-                    {/* rightside */}
-                    <div>
-                        Round {roomInfo?.roundNumber}/{roomInfo?.roundQuantity}
                     </div>
                 </div>
 

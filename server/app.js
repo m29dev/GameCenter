@@ -14,7 +14,10 @@ const {
     saveRoundResults,
     calculateGamePoints,
     clientDisconnect,
+    saveClientRoundReview,
+    startGameConfig,
 } = require('./config/GameConfig')
+const { start } = require('repl')
 
 dotenv.config()
 app.use(cors())
@@ -143,26 +146,26 @@ io.on('connection', async (socket) => {
 
         // on start the game / on next round start
         socket.on('startGame', async ({ roomId }) => {
-            // set roomJoinable status to false and increase round number value by 1
-            const room = await Room.findOne({ roomId })
-            if (!room) return console.log('no room found')
-            if (room.roundNumber >= room?.roundQuantity)
-                return console.log('max round reched')
+            // // set roomJoinable status to false and increase round number value by 1
+            // const room = await Room.findOne({ roomId })
+            // if (!room) return console.log('no room found')
+            // if (room.roundNumber >= room?.roundQuantity)
+            //     return console.log('max round reched')
 
-            const roomUpdate = await Room.findByIdAndUpdate(
-                { _id: room._id },
-                { roomJoinable: false, roundNumber: room.roundNumber + 1 },
-                { new: true }
-            )
+            // const roomUpdate = await Room.findByIdAndUpdate(
+            //     { _id: room._id },
+            //     { roomJoinable: false, roundNumber: room.roundNumber + 1 },
+            //     { new: true }
+            // )
 
             // start round and send updated room data to all room's clients
-            const character = randomCharacter()
-            socket.nsp
-                .to(roomId)
-                .emit('startGameRoom', { character, roomUpdate })
+            // const character = randomCharacter()
+
+            const startGameObject = await startGameConfig(roomId)
+            socket.nsp.to(roomId).emit('startGameRoom', startGameObject)
         })
 
-        // on round answers
+        // on end game
         socket.on('endGame', async ({ roomId }) => {
             const res = await Room.findOne({ roomId })
             socket.nsp.to(roomId).emit('endGameRoom', res)
@@ -178,9 +181,42 @@ io.on('connection', async (socket) => {
         })
 
         // on round results (reviewed answers)
-        socket.on('roundResults', (dataObject) => {
+        socket.on('roundResults', async (dataObject) => {
             // save round data to da database
             saveRoundResults(dataObject?.roomId, dataObject?.roundResults)
+
+            // add to the database information about client who saved review answers
+            // only if all active room's clients have sent their reviewed answers, next round runs
+            const canStartNextRound = await saveClientRoundReview(
+                dataObject?.roomId,
+                socket?.userId
+            )
+
+            console.log('can server start next round? ', canStartNextRound)
+
+            if (canStartNextRound) {
+                // start round and send updated room data to all room's clients
+                const startGameObject = await startGameConfig(
+                    dataObject?.roomId
+                )
+
+                // if startGameObject exists start next round
+                if (startGameObject) {
+                    socket.nsp
+                        .to(dataObject?.roomId)
+                        .emit('startGameRoom', startGameObject)
+                }
+
+                // if startGameObject does not exists means that all rounds've been played, fetch game point result
+                if (!startGameObject) {
+                    const gamePoints = await calculateGamePoints(
+                        dataObject?.roomId
+                    )
+                    socket.nsp
+                        .to(dataObject?.roomId)
+                        .emit('gamePointsServer', gamePoints)
+                }
+            }
         })
 
         socket.on('gamePoints', async (roomId) => {
@@ -195,7 +231,12 @@ io.on('connection', async (socket) => {
 
             const roomRestart = await Room.findByIdAndUpdate(
                 { _id: room._id },
-                { roomJoinable: true, roundNumber: 0, gameData: [] },
+                {
+                    roomJoinable: true,
+                    roundNumber: 0,
+                    roundReviews: [],
+                    gameData: [],
+                },
                 { new: true }
             )
 

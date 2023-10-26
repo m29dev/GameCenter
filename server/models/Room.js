@@ -17,6 +17,10 @@ const roomSchema = mongoose.Schema({
         type: Number,
         required: true,
     },
+    roundReviews: {
+        type: Array,
+        required: true,
+    },
     clients: {
         type: Array,
         required: true,
