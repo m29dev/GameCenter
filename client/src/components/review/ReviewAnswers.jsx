@@ -1,13 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Button } from 'react-bootstrap'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { useOutletContext } from 'react-router-dom'
 import './review.css'
+import { setGameInfo } from '../../redux/authSlice'
 
 const ReviewAnswers = () => {
-    const { roomInfo } = useSelector((state) => state.auth)
+    const { roomInfo, gameInfo } = useSelector((state) => state.auth)
     const [socket] = useOutletContext()
     const [hideReview, setHideReview] = useState(false)
+    const [hideWaitMessage, setHideWaitMessage] = useState(true)
+    const dispatch = useDispatch()
 
     // round answers from server, all room's clients
     const [roundAnswers, setRoundAnswers] = useState([])
@@ -16,13 +19,19 @@ const ReviewAnswers = () => {
             setHideReview(false)
             console.log('handleRoundAnswersServer! ', data)
             setRoundAnswers((state) => [...state, data])
+
+            const gameInfoObject = {
+                reviews: [...gameInfo.reviews, data],
+            }
+
+            dispatch(setGameInfo(gameInfoObject))
         }
 
         socket.on('roundAnswersServer', (data) => {
             handleRoundAnswersServer(data)
         })
         return () => socket.off('roundAnswersServer')
-    }, [socket, setRoundAnswers])
+    }, [socket, setRoundAnswers, dispatch, gameInfo])
 
     const handleReviewAnswer = (value, index_1, index_2) => {
         console.log(value, index_1, index_2)
@@ -53,7 +62,23 @@ const ReviewAnswers = () => {
 
         // hide review page
         setHideReview(true)
+
+        // show wait message
+        setHideWaitMessage(false)
+
+        // set reviewSent to true
+        const updateGameInfoObject = {
+            reviewSent: true,
+        }
+        dispatch(setGameInfo(updateGameInfoObject))
     }
+
+    // on wait message from server
+    // useEffect(() => {
+    //     socket.on('waitMessage', (data) => {
+    //         console.log(data.message)
+    //     })
+    // }, [socket])
 
     return (
         <>
@@ -65,7 +90,7 @@ const ReviewAnswers = () => {
 
                     <hr />
 
-                    {roundAnswers?.map((userObject, index_1) => (
+                    {gameInfo?.reviews?.map((userObject, index_1) => (
                         <div key={index_1}>
                             <h1>{userObject?.nickname}</h1>
 
@@ -100,11 +125,19 @@ const ReviewAnswers = () => {
                             <br />
                         </div>
                     ))}
-                    <hr />
-                    <Button variant="dark" onClick={handleSaveReview}>
+                    <hr style={{ marginTop: '0px' }} />
+                    <Button
+                        variant="dark"
+                        onClick={handleSaveReview}
+                        style={{ margin: 'auto', marginTop: '12px' }}
+                    >
                         Send review
                     </Button>
                 </div>
+            )}
+
+            {!hideWaitMessage && (
+                <h4 style={{ marginTop: '12px' }}>Wait for all players...</h4>
             )}
         </>
     )

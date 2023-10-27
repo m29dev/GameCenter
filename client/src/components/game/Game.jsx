@@ -1,22 +1,27 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useGetGameDataMutation } from '../../services/roomService'
+// import { useGetGameDataMutation } from '../../services/roomService'
 import { useDispatch, useSelector } from 'react-redux'
 import { useOutletContext } from 'react-router-dom'
-import { clearGameInfo, setRoomInfo } from '../../redux/authSlice'
+import { clearGameInfo, setGameInfo, setRoomInfo } from '../../redux/authSlice'
 import ReviewAnswers from '../review/ReviewAnswers'
 import Character from '../character/Character'
 import './game.css'
 import { Button } from 'react-bootstrap'
 
 const Game = (data) => {
-    const { userInfo, roomInfo } = useSelector((state) => state.auth)
+    const { userInfo, roomInfo, gameInfo } = useSelector((state) => state.auth)
     const [socket] = useOutletContext()
     const dispatch = useDispatch()
+
+    // const [game, setGame] = useState(false)
+    // const [character, setCharacter] = useState(null)
 
     // game config
     // categories
     const [country, setCountry] = useState(null)
     const [city, setCity] = useState(null)
+    const [thing, setThing] = useState(null)
+    const [celebrity, setCelebrity] = useState(null)
 
     const handleSaveGameData = useCallback(async () => {
         try {
@@ -32,7 +37,17 @@ const Game = (data) => {
                     {
                         category: 'Miasto',
                         answer: city ? city : '',
-                        review: [], //boolean, each room's client set this later in the review
+                        review: [],
+                    },
+                    {
+                        category: 'Przedmiot',
+                        answer: thing ? thing : '',
+                        review: [],
+                    },
+                    {
+                        category: 'Celebryta',
+                        answer: celebrity ? celebrity : '',
+                        review: [],
                     },
                 ],
             }
@@ -45,20 +60,41 @@ const Game = (data) => {
             // console.log(res)
             setCountry(null)
             setCity(null)
-        } catch (err) {
-            console.log(err)
-        }
-    }, [data, userInfo, country, city, socket])
+            setThing(null)
+            setCelebrity(null)
 
-    const [getGameData] = useGetGameDataMutation()
-    const handleGetGameData = useCallback(async () => {
-        try {
-            const res = await getGameData(data?.roomId).unwrap()
-            console.log(res)
+            const updateGameInfoObject = {
+                game: false,
+                character: gameInfo?.character,
+                reviewSent: gameInfo?.reviewSent,
+                reviews: gameInfo?.reviews,
+            }
+
+            dispatch(setGameInfo(updateGameInfoObject))
         } catch (err) {
             console.log(err)
         }
-    }, [getGameData, data])
+    }, [
+        data,
+        userInfo,
+        country,
+        city,
+        thing,
+        celebrity,
+        socket,
+        dispatch,
+        gameInfo,
+    ])
+
+    // const [getGameData] = useGetGameDataMutation()
+    // const handleGetGameData = useCallback(async () => {
+    //     try {
+    //         const res = await getGameData(data?.roomId).unwrap()
+    //         console.log(res)
+    //     } catch (err) {
+    //         console.log(err)
+    //     }
+    // }, [getGameData, data])
 
     // const [counter, setCounter] = useState(10)
     // const timer = useCallback(() => {
@@ -74,9 +110,6 @@ const Game = (data) => {
     //     }, 1000)
     // }, [setCounter])
 
-    const [game, setGame] = useState(false)
-    const [character, setCharacter] = useState(null)
-
     // on start the game emit startGame to all room's clients
     const onStartGame = () => {
         socket.emit('startGame', { roomId: data?.roomId })
@@ -91,11 +124,11 @@ const Game = (data) => {
         socket.emit('restartGame', { roomId: data?.roomId })
     }
 
-    const onGetResults = () => {
-        // socket.emit('getResults', { roomId: roomId?.roomId })
-        // fetch all game data
-        socket.emit('gamePoints', data)
-    }
+    // const onGetResults = () => {
+    //     // socket.emit('getResults', { roomId: roomId?.roomId })
+    //     // fetch all game data
+    //     socket.emit('gamePoints', data)
+    // }
 
     // start the game
     useEffect(() => {
@@ -103,16 +136,25 @@ const Game = (data) => {
             setCountry(null)
             setCity(null)
             console.log('game starts! ', data?.character)
-            setCharacter(data?.character)
+            // setCharacter(data?.character)
             dispatch(setRoomInfo(data?.roomUpdate))
-            setGame(true)
+            // setGame(true)
+
+            const gameInfoObject = {
+                game: true,
+                character: data?.character,
+                reviewSent: false, //update to true after review sent
+                reviews: [],
+            }
+
+            dispatch(setGameInfo(gameInfoObject))
         }
 
         socket.on('startGameRoom', (data) => {
             handleStartGame(data)
         })
         return () => socket.off('startGameRoom', handleStartGame)
-    }, [socket, setCharacter, setGame, dispatch])
+    }, [socket, dispatch])
 
     const [gamePoints, setGamePoints] = useState(null)
 
@@ -136,33 +178,35 @@ const Game = (data) => {
             // save user answers
             handleSaveGameData()
 
-            setGame(false)
+            // setGame(false)
 
             console.log('fetched data: ', res)
         }
 
         socket.on('endGameRoom', handleEndGame)
         return () => socket.off('endGameRoom', handleEndGame)
-    }, [socket, handleSaveGameData, handleGetGameData, setGame])
+    }, [socket, handleSaveGameData])
 
     // re-start the game
     useEffect(() => {
         const handleRestartGame = (roomRestart) => {
             setCountry(null)
             setCity(null)
+            setThing(null)
+            setCelebrity(null)
             console.log('game has been restarted! ', roomRestart)
             dispatch(setRoomInfo(roomRestart))
             dispatch(clearGameInfo())
-            setCharacter(null)
+            // setCharacter(null)
             setGamePoints(null)
-            setGame(false)
+            // setGame(false)
         }
 
         socket.on('restartGameRoom', (roomRestart) => {
             handleRestartGame(roomRestart)
         })
         return () => socket.off('restartGameRoom', handleRestartGame)
-    }, [socket, setCharacter, setGame, dispatch])
+    }, [socket, setThing, setCelebrity, dispatch])
 
     return (
         <>
@@ -174,67 +218,141 @@ const Game = (data) => {
                         {/* display before each round */}
 
                         {/* current round */}
-                        {roomInfo?.roundNumber > 0 && (
+                        {roomInfo?.roundNumber > 0 && !gamePoints && (
                             <div>
                                 Round {roomInfo?.roundNumber}/
                                 {roomInfo?.roundQuantity}
                             </div>
                         )}
 
-                        {!game &&
+                        {!gameInfo?.game &&
                             roomInfo?.roundNumber < roomInfo?.roundQuantity &&
                             roomInfo?.roundNumber === 0 && (
-                                <Button variant="dark" onClick={onStartGame}>
+                                <Button
+                                    variant="dark"
+                                    onClick={onStartGame}
+                                    style={{ paddingLeft: '0px' }}
+                                >
                                     Start Game
                                 </Button>
                             )}
 
-                        {roomInfo?.roundNumber >= roomInfo?.roundQuantity && (
-                            <>
-                                <Button variant="dark" onClick={onRestartGame}>
-                                    Restart game
-                                </Button>
-                                {/* <Button variant="dark" onClick={onGetResults}>
+                        {!gameInfo?.game &&
+                            gamePoints &&
+                            roomInfo?.roundNumber >=
+                                roomInfo?.roundQuantity && (
+                                <>
+                                    <Button
+                                        variant="dark"
+                                        onClick={onRestartGame}
+                                        style={{ paddingLeft: '0px' }}
+                                    >
+                                        Restart Game
+                                    </Button>
+                                    {/* <Button variant="dark" onClick={onGetResults}>
                                     Get results
                                 </Button> */}
-                            </>
-                        )}
+                                </>
+                            )}
                     </div>
                 </div>
 
+                {/* display before start of the game */}
+                {!gameInfo?.game &&
+                    roomInfo?.roundNumber < roomInfo?.roundQuantity &&
+                    roomInfo?.roundNumber === 0 && (
+                        <div className="game-container">
+                            <div
+                                style={{
+                                    marginTop: '30px',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                }}
+                            >
+                                <h4
+                                    style={{
+                                        margin: '0px',
+                                        marginRight: '12px',
+                                    }}
+                                >
+                                    Invite friends
+                                </h4>
+                                <Button
+                                    variant="dark"
+                                    onClick={() =>
+                                        navigator.clipboard.writeText(
+                                            window.location.href
+                                        )
+                                    }
+                                >
+                                    Copy link
+                                </Button>
+                            </div>
+                        </div>
+                    )}
+
                 {/* display game round */}
-                {game && (
+                {gameInfo?.game && (
                     <>
                         <div className="game-container">
                             <Character
-                                character={character}
+                                character={gameInfo?.character}
                                 theme="purple"
                             ></Character>
 
                             {/* game box */}
                             <div className="game-box">
+                                {/* panstwo */}
                                 <label htmlFor="Panstwo">Panstwo</label>
                                 <input
                                     className="game-text-input-box"
                                     type="text"
-                                    placeholder={`${character}...`}
+                                    placeholder={`${gameInfo?.character}...`}
                                     onChange={(e) => {
                                         setCountry(e.target.value)
                                     }}
                                 />
+
+                                {/* miasto */}
                                 <label htmlFor="Miasto">Miasto</label>
                                 <input
                                     className="game-text-input-box"
                                     type="text"
-                                    placeholder={`${character}...`}
+                                    placeholder={`${gameInfo?.character}...`}
                                     onChange={(e) => {
                                         setCity(e.target.value)
                                     }}
                                 />
 
+                                {/* przedmiot */}
+                                <label htmlFor="Przedmiot">Przedmiot</label>
+                                <input
+                                    className="game-text-input-box"
+                                    type="text"
+                                    placeholder={`${gameInfo?.character}...`}
+                                    onChange={(e) => {
+                                        setThing(e.target.value)
+                                    }}
+                                />
+
+                                {/* celebryta */}
+                                <label htmlFor="Przedmiot">Celebryta</label>
+                                <input
+                                    className="game-text-input-box"
+                                    type="text"
+                                    placeholder={`${gameInfo?.character}...`}
+                                    onChange={(e) => {
+                                        setCelebrity(e.target.value)
+                                    }}
+                                />
+
                                 <Button
                                     variant="dark"
-                                    style={{ margin: 'auto' }}
+                                    style={{
+                                        margin: 'auto',
+                                        marginTop: '18px',
+                                    }}
                                     onClick={onEndGame}
                                 >
                                     End Round
@@ -245,11 +363,11 @@ const Game = (data) => {
                 )}
 
                 {/* display on end of the game / round */}
-                {!game && (
+                {!gameInfo?.game && (
                     <div className="stats-box">
                         {/* display at the end of the game */}
                         {roomInfo?.roundNumber >= roomInfo?.roundQuantity && (
-                            <>
+                            <div style={{ marginTop: '30px' }}>
                                 {/* display if game results has been fetched */}
                                 {gamePoints &&
                                     gamePoints?.map((client, index) => (
@@ -258,11 +376,11 @@ const Game = (data) => {
                                             pkt
                                         </h1>
                                     ))}
-                            </>
+                            </div>
                         )}
 
                         {/* display game review answers after each round */}
-                        {roomInfo?.roundNumber > 0 && (
+                        {roomInfo?.roundNumber > 0 && !gamePoints && (
                             // round answers
                             <ReviewAnswers></ReviewAnswers>
                         )}
