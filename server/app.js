@@ -246,6 +246,7 @@ io.on('connection', async (socket) => {
         socket.on('disconnect', () => {
             // clientDisconnect(socket.userId)
             console.log('user disconnected: ', socket.userId)
+            socket.to(socket.id).emit('onDisconnect')
         })
     } catch (err) {
         console.log(err)

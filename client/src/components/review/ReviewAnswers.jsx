@@ -18,10 +18,10 @@ const ReviewAnswers = () => {
             setHideReview(false)
             setRoundAnswers((state) => [...state, data])
 
-            const gameInfoObject = {
-                reviews: [...gameInfo.reviews, data],
-            }
-            dispatch(setGameInfo(gameInfoObject))
+            const clone = structuredClone(gameInfo)
+
+            clone.reviews = [...gameInfo.reviews, data]
+            dispatch(setGameInfo(clone))
         }
 
         socket.on('roundAnswersServer', (data) => {

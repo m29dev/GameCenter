@@ -58,11 +58,15 @@ const Game = (data) => {
             setCelebrity(null)
 
             const updateGameInfoObject = {
+                roomId: gameInfo?.roomId,
                 game: false,
                 character: gameInfo?.character,
                 reviewSent: gameInfo?.reviewSent,
                 reviews: gameInfo?.reviews,
             }
+
+            console.log('1', updateGameInfoObject)
+
             dispatch(setGameInfo(updateGameInfoObject))
         } catch (err) {
             console.log(err)
@@ -101,6 +105,7 @@ const Game = (data) => {
             dispatch(setRoomInfo(data?.roomUpdate))
 
             const gameInfoObject = {
+                roomId: roomInfo?.roomId,
                 game: true,
                 character: data?.character,
                 reviewSent: false, //update to true after review sent
@@ -114,7 +119,7 @@ const Game = (data) => {
             handleStartGame(data)
         })
         return () => socket.off('startGameRoom', handleStartGame)
-    }, [socket, dispatch])
+    }, [socket, dispatch, roomInfo])
 
     const [gamePoints, setGamePoints] = useState(null)
 

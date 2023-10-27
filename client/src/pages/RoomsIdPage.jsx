@@ -4,11 +4,11 @@ import Chat from '../components/chat/Chat'
 import Game from '../components/game/Game'
 import './room.css'
 import { useDispatch, useSelector } from 'react-redux'
-import { setRoomInfo } from '../redux/authSlice'
+import { clearGameInfo, setRoomInfo } from '../redux/authSlice'
 import { BsFillChatDotsFill } from 'react-icons/bs'
 
 const RoomsIdPage = () => {
-    const { userInfo } = useSelector((state) => state.auth)
+    const { userInfo, gameInfo } = useSelector((state) => state.auth)
     const [socket] = useOutletContext()
     const [roomId, setRoomId] = useState(null)
     const [joinRoomMsg, setJoinRoomMsg] = useState(null)
@@ -29,16 +29,22 @@ const RoomsIdPage = () => {
         })
     }, [params, setRoomId, socket])
 
+    useEffect(() => {
+        joinRoom()
+    }, [joinRoom])
+
     // join room on init
     useEffect(() => {
         if (!userInfo) {
             navigate('/auth')
         }
-    })
 
-    useEffect(() => {
-        joinRoom()
-    }, [joinRoom])
+        // if gameInfo.roomId !== this.roomId clear gameInfo
+        const { id } = params
+        if (gameInfo?.roomId !== id) {
+            dispatch(clearGameInfo())
+        }
+    }, [navigate, dispatch, gameInfo, userInfo, params])
 
     // on room join data event
     useEffect(() => {
