@@ -33,7 +33,6 @@ const RoomsCreatePage = () => {
                 id: roomName,
                 roundQuantity,
             }).unwrap()
-            console.log(res)
 
             disptach(clearGameInfo())
             navigate(`/rooms/${res}`)

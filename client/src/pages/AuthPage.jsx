@@ -19,7 +19,6 @@ const AuthPage = () => {
                 if (nickname === (null || ''))
                     return window.alert('nickname value cannot be empty')
                 const res = await userConnect(nickname).unwrap()
-                console.log(res)
                 dispatch(setUserInfo(res))
             } catch (err) {
                 console.log(err)
@@ -29,7 +28,6 @@ const AuthPage = () => {
     )
 
     useEffect(() => {
-        console.log('userInfo update')
         if (userInfo) navigate('/home')
     }, [userInfo, navigate])
 

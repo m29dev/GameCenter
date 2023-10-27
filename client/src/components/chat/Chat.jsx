@@ -43,7 +43,6 @@ const Chat = (data) => {
     // on room join msg
     useEffect(() => {
         const handleJoinRoomMsg = (data) => {
-            console.log(data)
             const msgObject = {
                 server: true,
                 sender: '',

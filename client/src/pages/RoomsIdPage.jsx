@@ -61,8 +61,6 @@ const RoomsIdPage = () => {
 
     const handleChatToggle = () => {
         setChatDisplayToggle(!chatDisplayToggle)
-
-        console.log(chatDisplayToggle)
     }
 
     return (

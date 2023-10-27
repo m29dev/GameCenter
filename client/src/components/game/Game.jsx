@@ -13,9 +13,6 @@ const Game = (data) => {
     const [socket] = useOutletContext()
     const dispatch = useDispatch()
 
-    // const [game, setGame] = useState(false)
-    // const [character, setCharacter] = useState(null)
-
     // game config
     // categories
     const [country, setCountry] = useState(null)
@@ -51,13 +48,10 @@ const Game = (data) => {
                     },
                 ],
             }
+
             // send dataObject to the socket.io server
             socket.emit('roundAnswers', dataObject)
 
-            // dispatch(setGameInfo(dataObject))
-
-            // const res = await saveGameData(dataObject)
-            // console.log(res)
             setCountry(null)
             setCity(null)
             setThing(null)
@@ -69,7 +63,6 @@ const Game = (data) => {
                 reviewSent: gameInfo?.reviewSent,
                 reviews: gameInfo?.reviews,
             }
-
             dispatch(setGameInfo(updateGameInfoObject))
         } catch (err) {
             console.log(err)
@@ -86,30 +79,6 @@ const Game = (data) => {
         gameInfo,
     ])
 
-    // const [getGameData] = useGetGameDataMutation()
-    // const handleGetGameData = useCallback(async () => {
-    //     try {
-    //         const res = await getGameData(data?.roomId).unwrap()
-    //         console.log(res)
-    //     } catch (err) {
-    //         console.log(err)
-    //     }
-    // }, [getGameData, data])
-
-    // const [counter, setCounter] = useState(10)
-    // const timer = useCallback(() => {
-    //     let num = 9
-    //     const intervalRef = setInterval(() => {
-    //         if (num >= 0) {
-    //             setCounter(num)
-    //             console.log(num)
-    //             num--
-    //         } else {
-    //             clearInterval(intervalRef)
-    //         }
-    //     }, 1000)
-    // }, [setCounter])
-
     // on start the game emit startGame to all room's clients
     const onStartGame = () => {
         socket.emit('startGame', { roomId: data?.roomId })
@@ -124,21 +93,12 @@ const Game = (data) => {
         socket.emit('restartGame', { roomId: data?.roomId })
     }
 
-    // const onGetResults = () => {
-    //     // socket.emit('getResults', { roomId: roomId?.roomId })
-    //     // fetch all game data
-    //     socket.emit('gamePoints', data)
-    // }
-
     // start the game
     useEffect(() => {
         const handleStartGame = (data) => {
             setCountry(null)
             setCity(null)
-            console.log('game starts! ', data?.character)
-            // setCharacter(data?.character)
             dispatch(setRoomInfo(data?.roomUpdate))
-            // setGame(true)
 
             const gameInfoObject = {
                 game: true,
@@ -172,15 +132,9 @@ const Game = (data) => {
 
     // end the game
     useEffect(() => {
-        const handleEndGame = (res) => {
-            console.log('game ends!  ')
-
+        const handleEndGame = () => {
             // save user answers
             handleSaveGameData()
-
-            // setGame(false)
-
-            console.log('fetched data: ', res)
         }
 
         socket.on('endGameRoom', handleEndGame)
@@ -194,12 +148,9 @@ const Game = (data) => {
             setCity(null)
             setThing(null)
             setCelebrity(null)
-            console.log('game has been restarted! ', roomRestart)
             dispatch(setRoomInfo(roomRestart))
             dispatch(clearGameInfo())
-            // setCharacter(null)
             setGamePoints(null)
-            // setGame(false)
         }
 
         socket.on('restartGameRoom', (roomRestart) => {
@@ -249,9 +200,6 @@ const Game = (data) => {
                                     >
                                         Restart Game
                                     </Button>
-                                    {/* <Button variant="dark" onClick={onGetResults}>
-                                    Get results
-                                </Button> */}
                                 </>
                             )}
                     </div>
@@ -380,10 +328,12 @@ const Game = (data) => {
                         )}
 
                         {/* display game review answers after each round */}
-                        {roomInfo?.roundNumber > 0 && !gamePoints && (
-                            // round answers
-                            <ReviewAnswers></ReviewAnswers>
-                        )}
+                        {roomInfo?.roundNumber > 0 &&
+                            !gamePoints &&
+                            !gameInfo?.reviewSent && (
+                                // round answers
+                                <ReviewAnswers></ReviewAnswers>
+                            )}
                     </div>
                 )}
             </div>

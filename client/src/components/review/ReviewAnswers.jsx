@@ -17,13 +17,11 @@ const ReviewAnswers = () => {
     useEffect(() => {
         const handleRoundAnswersServer = (data) => {
             setHideReview(false)
-            console.log('handleRoundAnswersServer! ', data)
             setRoundAnswers((state) => [...state, data])
 
             const gameInfoObject = {
                 reviews: [...gameInfo.reviews, data],
             }
-
             dispatch(setGameInfo(gameInfoObject))
         }
 
@@ -34,30 +32,27 @@ const ReviewAnswers = () => {
     }, [socket, setRoundAnswers, dispatch, gameInfo])
 
     const handleReviewAnswer = (value, index_1, index_2) => {
-        console.log(value, index_1, index_2)
         if (!value) roundAnswers?.[index_1]?.data?.[index_2].review.push(false)
         if (value) roundAnswers?.[index_1]?.data?.[index_2].review.pop()
     }
 
     const handleSaveReview = () => {
-        let fixRoundAnswers = [...roundAnswers]
-        fixRoundAnswers.map((roundAnswer) => {
+        const clone = structuredClone(gameInfo.reviews)
+
+        clone.map((roundAnswer) => {
             roundAnswer.data.map((userAnswer) => {
                 if (userAnswer.answer === '') {
                     userAnswer.review.push(false)
-                    console.log('found empty answer')
                 }
             })
         })
 
-        console.log(fixRoundAnswers)
-
         const dataObject = {
             roomId: roomInfo?.roomId,
-            roundResults: fixRoundAnswers,
+            roundResults: clone,
         }
 
-        // send to da server saved review
+        // send to the server saved review
         socket.emit('roundResults', dataObject)
 
         // hide review page
@@ -72,13 +67,6 @@ const ReviewAnswers = () => {
         }
         dispatch(setGameInfo(updateGameInfoObject))
     }
-
-    // on wait message from server
-    // useEffect(() => {
-    //     socket.on('waitMessage', (data) => {
-    //         console.log(data.message)
-    //     })
-    // }, [socket])
 
     return (
         <>

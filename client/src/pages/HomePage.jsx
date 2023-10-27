@@ -46,7 +46,6 @@ const HomePage = () => {
                 id: roomName,
                 roundQuantity,
             }).unwrap()
-            console.log(res)
 
             disptach(clearGameInfo())
             navigate(`/rooms/${res}`)
@@ -117,9 +116,6 @@ const HomePage = () => {
                         }}
                         value={roomName}
                     />
-
-                    {/* for submit feature */}
-                    {/* <button style={{ display: 'none' }}></button> */}
 
                     <Button
                         variant="dark"
