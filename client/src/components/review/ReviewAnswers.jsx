@@ -9,7 +9,6 @@ const ReviewAnswers = () => {
     const { roomInfo, gameInfo } = useSelector((state) => state.auth)
     const [socket] = useOutletContext()
     const [hideReview, setHideReview] = useState(false)
-    const [hideWaitMessage, setHideWaitMessage] = useState(true)
     const dispatch = useDispatch()
 
     // round answers from server, all room's clients
@@ -58,9 +57,6 @@ const ReviewAnswers = () => {
         // hide review page
         setHideReview(true)
 
-        // show wait message
-        setHideWaitMessage(false)
-
         // set reviewSent to true
         const updateGameInfoObject = {
             reviewSent: true,
@@ -70,7 +66,7 @@ const ReviewAnswers = () => {
 
     return (
         <>
-            {!hideReview && (
+            {!hideReview && !gameInfo?.reviewSent && (
                 <div className="review-box">
                     <br />
 
@@ -124,7 +120,7 @@ const ReviewAnswers = () => {
                 </div>
             )}
 
-            {!hideWaitMessage && (
+            {gameInfo?.reviewSent && (
                 <h4 style={{ marginTop: '12px' }}>Wait for all players...</h4>
             )}
         </>

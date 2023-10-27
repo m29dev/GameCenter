@@ -328,12 +328,10 @@ const Game = (data) => {
                         )}
 
                         {/* display game review answers after each round */}
-                        {roomInfo?.roundNumber > 0 &&
-                            !gamePoints &&
-                            !gameInfo?.reviewSent && (
-                                // round answers
-                                <ReviewAnswers></ReviewAnswers>
-                            )}
+                        {roomInfo?.roundNumber > 0 && !gamePoints && (
+                            // round answers
+                            <ReviewAnswers></ReviewAnswers>
+                        )}
                     </div>
                 )}
             </div>
