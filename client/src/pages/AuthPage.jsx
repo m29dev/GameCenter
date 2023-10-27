@@ -35,22 +35,29 @@ const AuthPage = () => {
 
     return (
         <>
-            <h1>Państwa Miasta</h1>
+            <div className="page-container">
+                <h1>Państwa Miasta</h1>
 
-            <form className="form-container" onSubmit={onConnect}>
-                <input
-                    className="form-container-input"
-                    type="text"
-                    placeholder="Set nickname"
-                    onChange={(e) => {
-                        setNickname(e?.target?.value)
-                    }}
-                    value={nickname}
-                />
-                <Button variant="dark" className="form-container-btn">
-                    Connect
-                </Button>
-            </form>
+                <form className="form-container" onSubmit={onConnect}>
+                    <input
+                        className="form-container-input"
+                        type="text"
+                        placeholder="Set a nickname"
+                        onChange={(e) => {
+                            setNickname(e?.target?.value)
+                        }}
+                        value={nickname}
+                    />
+
+                    <Button
+                        variant="dark"
+                        onClick={onConnect}
+                        className="form-container-btn"
+                    >
+                        Connect
+                    </Button>
+                </form>
+            </div>
         </>
     )
 }

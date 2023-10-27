@@ -75,7 +75,11 @@ const HomePage = () => {
                         }}
                         value={room}
                     />
-                    <Button variant="dark" className="form-container-btn">
+                    <Button
+                        variant="dark"
+                        className="form-container-btn"
+                        onClick={handleJoinRoom}
+                    >
                         Join room
                     </Button>
                 </form>
@@ -115,12 +119,16 @@ const HomePage = () => {
                     />
 
                     {/* for submit feature */}
-                    <button style={{ display: 'none' }}></button>
+                    {/* <button style={{ display: 'none' }}></button> */}
 
                     <Button
                         variant="dark"
                         disabled={roomName ? false : true}
                         className="form-container-btn"
+                        onClick={(e) => {
+                            e.preventDefault()
+                            onRoomCreate()
+                        }}
                     >
                         Create room
                     </Button>

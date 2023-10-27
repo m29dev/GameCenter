@@ -8,16 +8,12 @@ const roomRoutes = require('./routes/roomRoutes')
 const http = require('http')
 const dbConnect = require('./config/DatabaseConfig')
 const Room = require('./models/Room')
-const room = require('./models/Room')
 const {
-    randomCharacter,
     saveRoundResults,
     calculateGamePoints,
-    clientDisconnect,
     saveClientRoundReview,
     startGameConfig,
 } = require('./config/GameConfig')
-const { start } = require('repl')
 
 dotenv.config()
 app.use(cors())
@@ -31,7 +27,10 @@ const io = require('socket.io')(server, {
     allowEIO3: true,
     cors: {
         // origin: 'https://socialcloudclient.onrender.com',
-        origin: 'http://localhost:5173',
+        origin: [
+            'http://localhost:5173',
+            'https://panstwamiastaclient.onrender.com',
+        ],
         methods: ['GET', 'POST'],
     },
 })
