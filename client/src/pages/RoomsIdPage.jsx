@@ -3,11 +3,12 @@ import { useNavigate, useOutletContext, useParams } from 'react-router-dom'
 import Chat from '../components/chat/Chat'
 import Game from '../components/game/Game'
 import './room.css'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { setRoomInfo } from '../redux/authSlice'
 import { BsFillChatDotsFill } from 'react-icons/bs'
 
 const RoomsIdPage = () => {
+    const { userInfo } = useSelector((state) => state.auth)
     const [socket] = useOutletContext()
     const [roomId, setRoomId] = useState(null)
     const [joinRoomMsg, setJoinRoomMsg] = useState(null)
@@ -29,6 +30,12 @@ const RoomsIdPage = () => {
     }, [params, setRoomId, socket])
 
     // join room on init
+    useEffect(() => {
+        if (!userInfo) {
+            navigate('/auth')
+        }
+    })
+
     useEffect(() => {
         joinRoom()
     }, [joinRoom])

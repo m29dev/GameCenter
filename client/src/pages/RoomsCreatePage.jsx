@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRoomCreateMutation } from '../services/roomService'
 import { useNavigate } from 'react-router-dom'
-import { useDispatch } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { clearGameInfo } from '../redux/authSlice'
 import { Button } from 'react-bootstrap'
 
 const RoomsCreatePage = () => {
+    const { userInfo } = useSelector((state) => state.auth)
     let categories = ['Panstwa', 'Miasta']
     const [roundQuantity, setRoundQuantity] = useState(1)
     const [roomName, setRoomName] = useState('')
@@ -18,6 +19,12 @@ const RoomsCreatePage = () => {
         const value = Math.max(min, Math.min(max, Number(event.target.value)))
         setRoundQuantity(value)
     }
+
+    useEffect(() => {
+        if (!userInfo) {
+            navigate('/auth')
+        }
+    })
 
     const [roomCreate] = useRoomCreateMutation()
     const onRoomCreate = async () => {
