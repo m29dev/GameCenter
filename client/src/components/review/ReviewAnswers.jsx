@@ -31,12 +31,17 @@ const ReviewAnswers = () => {
     }, [socket, setRoundAnswers, dispatch, gameInfo])
 
     const handleReviewAnswer = (value, index_1, index_2) => {
-        if (!value) roundAnswers?.[index_1]?.data?.[index_2].review.push(false)
-        if (value) roundAnswers?.[index_1]?.data?.[index_2].review.pop()
+        const clone = structuredClone(roundAnswers)
+
+        if (!value) clone?.[index_1]?.data?.[index_2].review.push(false)
+        if (value) clone?.[index_1]?.data?.[index_2].review.pop()
+
+        setRoundAnswers(clone)
+        // dispatch(setGameInfo(clone))
     }
 
     const handleSaveReview = () => {
-        const clone = structuredClone(gameInfo.reviews)
+        const clone = structuredClone(roundAnswers)
 
         clone.map((roundAnswer) => {
             roundAnswer.data.map((userAnswer) => {
